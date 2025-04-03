@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreeVPN - Conexão por Dados Móveis</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #166088;
+            --accent: #4fc3f7;
+            --background: #f5f7fa;
+            --text: #333333;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: var(--secondary);
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .connection-status {
+            background-color: #f1f5fe;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            border: 1px solid #e0e6f5;
+        }
+        
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            background-color: var(--error);
+        }
+        
+        .status-indicator.connected {
+            background-color: var(--success);
+        }
+        
+        .status-text {
+            font-weight: 600;
+            display: inline;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .btn-connect {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-connect:hover {
+            background-color: var(--secondary);
+        }
+        
+        .btn-disconnect {
+            background-color: var(--error);
+            color: white;
+            display: none;
+        }
+        
+        .btn-disconnect:hover {
+            background-color: #d32f2f;
+        }
+        
+        .server-info {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .server-info h3 {
+            margin-bottom: 10px;
+            color: var(--secondary);
+            font-size: 16px;
+        }
+        
+        .server-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            background-color: white;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background-color: #f1f5fe;
+            border-radius: 6px;
+            margin: 0 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--secondary);
+            opacity: 0.8;
+        }
+        
+        .data-warning {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--warning);
+            padding: 12px;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .feature-list {
+            list-style-type: none;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: var(--success);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">VPN</div>
+            <h1>FreeVPN Mobile</h1>
+            <p class="subtitle">Conexão segura usando apenas dados móveis</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="openTab('connect')">Conectar</div>
+            <div class="tab" onclick="openTab('info')">Informações</div>
+            <div class="tab" onclick="openTab('settings')">Configurações</div>
+        </div>
+        
+        <div id="connect" class="tab-content active">
+            <div class="connection-status">
+                <span class="status-indicator" id="status-light"></span>
+                <span class="status-text" id="status-text">Desconectado</span>
+            </div>
+            
+            <div class="server-info">
+                <h3>Servidor VPN</h3>
+                <select class="server-select" id="server-select">
+                    <option value="br-1">Brasil - São Paulo (Recomendado)</option>
+                    <option value="us-1">Estados Unidos - Nova York</option>
+                    <option value="de-1">Alemanha - Frankfurt</option>
+                    <option value="sg-1">Singapura</option>
+                    <option value="jp-1">Japão - Tóquio</option>
+                </select>
+                <p id="server-ping">Ping: -- ms</p>
+            </div>
+            
+            <div class="loading" id="connecting-loading">
+                <span class="spinner"></span>
+                <span>Conectando...</span>
+            </div>
+            
+            <button class="btn btn-connect" id="connect-btn" onclick="connectVPN()">Conectar VPN</button>
+            <button class="btn btn-disconnect" id="disconnect-btn" onclick="disconnectVPN()">Desconectar</button>
+            
+            <div class="data-warning">
+                ⚠️ Este serviço utiliza apenas dados móveis. Certifique-se de ter um plano de dados ativo.
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="data-used">0 MB</div>
+                    <div class="stat-label">Dados usados</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="connection-time">00:00</div>
+                    <div class="stat-label">Tempo conectado</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="data-saved">0 MB</div>
+                    <div class="stat-label">Dados economizados</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="info" class="tab-content">
+            <h3>Sobre o FreeVPN Mobile</h3>
+            <p>Este serviço permite conectar-se à internet através de uma VPN usando apenas dados móveis, mesmo sem créditos no seu chip.</p>
+            
+            <h3 style="margin-top: 20px;">Como funciona?</h3>
+            <ul class="feature-list">
+                <li>Tecnologia de tunelamento de dados móveis</li>
+                <li>Compressão de dados para economizar seu plano</li>
+                <li>Conexão segura e criptografada</li>
+                <li>Funciona sem créditos no chip</li>
+                <li>Não requer conexão Wi-Fi</li>
+            </ul>
+            
+            <div class="data-warning" style="margin-top: 20px;">
+                ⚠️ A velocidade pode variar de acordo com a cobertura da sua operadora.
+            </div>
+        </div>
+        
+        <div id="settings" class="tab-content">
+            <h3>Configurações</h3>
+            
+            <div style="margin: 15px 0;">
+                <label>
+                    <input type="checkbox" id="auto-connect" checked>
+                    Conectar automaticamente quando abrir o app
+                </label>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label>
+                    <input type="checkbox" id="data-saver" checked>
+                    Modo economia de dados
+                </label>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label>
+                    <input type="checkbox" id="ad-blocker">
+                    Bloquear anúncios
+                </label>
+            </div>
+            
+            <div style="margin-top: 25px;">
+                <button class="btn" style="background-color: #f1f1f1;" onclick="resetSettings()">
+                    Restaurar padrões
+                </button>
+            </div>
+        </div>
+        
+        <footer>
+            FreeVPN Mobile v1.0 • Usando dados móveis • Não requer Wi-Fi
+        </footer>
+    </div>
+
+    <script>
+        // Variáveis de estado
+        let isConnected = false;
+        let connectionTimer = null;
+        let secondsConnected = 0;
+        let dataUsed = 0;
+        let dataSaved = 0;
+        
+        // Elementos DOM
+        const statusLight = document.getElementById('status-light');
+        const statusText = document.getElementById('status-text');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const connectingLoading = document.getElementById('connecting-loading');
+        const connectionTimeEl = document.getElementById('connection-time');
+        const dataUsedEl = document.getElementById('data-used');
+        const dataSavedEl = document.getElementById('data-saved');
+        const serverPingEl = document.getElementById('server-ping');
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            updateServerPings();
+            
+            // Verificar se há conexão salva
+            if(localStorage.getItem('vpnConnected') === 'true') {
+                simulateConnection();
+            }
+        });
+        
+        // Funções de conexão
+        function connectVPN() {
+            if(isConnected) return;
+            
+            connectingLoading.style.display = 'block';
+            connectBtn.style.display = 'none';
+            
+            // Simular tempo de conexão
+            setTimeout(function() {
+                simulateConnection();
+                connectingLoading.style.display = 'none';
+            }, 2000);
+        }
+        
+        function disconnectVPN() {
+            if(!isConnected) return;
+            
+            isConnected = false;
+            statusLight.classList.remove('connected');
+            statusText.textContent = 'Desconectado';
+            connectBtn.style.display = 'block';
+            disconnectBtn.style.display = 'none';
+            
+            clearInterval(connectionTimer);
+            localStorage.removeItem('vpnConnected');
+            
+            // Parar de simular uso de dados
+            clearInterval(dataUsageInterval);
+        }
+        
+        function simulateConnection() {
+            isConnected = true;
+            statusLight.classList.add('connected');
+            statusText.textContent = 'Conectado';
+            connectBtn.style.display = 'none';
+            disconnectBtn.style.display = 'block';
+            
+            localStorage.setItem('vpnConnected', 'true');
+            
+            // Iniciar contador de tempo
+            secondsConnected = 0;
+            updateConnectionTime();
+            connectionTimer = setInterval(updateConnectionTime, 1000);
+            
+            // Simular uso de dados
+            simulateDataUsage();
+        }
+        
+        function updateConnectionTime() {
+            secondsConnected++;
+            const minutes = Math.floor(secondsConnected / 60);
+            const seconds = secondsConnected % 60;
+            connectionTimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        let dataUsageInterval;
+        function simulateDataUsage() {
+            // Limpar qualquer intervalo existente
+            if(dataUsageInterval) clearInterval(dataUsageInterval);
+            
+            dataUsageInterval = setInterval(function() {
+                // Gerar uso de dados aleatório entre 0.1 e 0.5 MB
+                const dataChunk = 0.1 + Math.random() * 0.4;
+                dataUsed += dataChunk;
+                
+                // Simular economia de dados (20-30% do uso)
+                const savedChunk = dataChunk * (0.2 + Math.random() * 0.1);
+                dataSaved += savedChunk;
+                
+                // Atualizar exibição
+                dataUsedEl.textContent = `${dataUsed.toFixed(1)} MB`;
+                dataSavedEl.textContent = `${dataSaved.toFixed(1)} MB`;
+            }, 3000);
+        }
+        
+        function updateServerPings() {
+            const servers = [
+                { id: 'br-1', name: 'Brasil - São Paulo', ping: 25 + Math.floor(Math.random() * 20) },
+                { id: 'us-1', name: 'Estados Unidos - Nova York', ping: 120 + Math.floor(Math.random() * 50) },
+                { id: 'de-1', name: 'Alemanha - Frankfurt', ping: 180 + Math.floor(Math.random() * 60) },
+                { id: 'sg-1', name: 'Singapura', ping: 250 + Math.floor(Math.random() * 80) },
+                { id: 'jp-1', name: 'Japão - Tóquio', ping: 220 + Math.floor(Math.random() * 70) }
+            ];
+            
+            const selectedServer = document.getElementById('server-select').value;
+            const server = servers.find(s => s.id === selectedServer);
+            
+            if(server) {
+                serverPingEl.textContent = `Ping: ${server.ping} ms`;
+            }
+            
+            // Atualizar pings a cada 5 segundos
+            setTimeout(updateServerPings, 5000);
+        }
+        
+        // Funções de abas
+        function openTab(tabId) {
+            // Esconder todas as abas
+            const tabContents = document.getElementsByClassName('tab-content');
+            for(let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Mostrar a aba selecionada
+            document.getElementById(tabId).classList.add('active');
+            
+            // Atualizar guias ativas
+            const tabs = document.getElementsByClassName('tab');
+            for(let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            event.currentTarget.classList.add('active');
+        }
+        
+        // Funções de configurações
+        function resetSettings() {
+            document.getElementById('auto-connect').checked = true;
+            document.getElementById('data-saver').checked = true;
+            document.getElementById('ad-blocker').checked = false;
+            
+            alert('Configurações restauradas para os valores padrão.');
+        }
+    </script>
+</body>
+</html>
